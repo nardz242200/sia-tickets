@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Booking Confirmation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px;
+      background-image: url(bg.jpg); /* Background image */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+    }
+    .receipt {
+      background: #fff;
+      width: 100%;
+      max-width: 750px;
+      padding: 50px;
+      margin: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    .receipt:hover {
+      transform: translateY(-5px);
+    }
+    h2 {
+      font-size: 32px;
+      text-align: center;
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .info {
+      line-height: 1.8;
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .info strong {
+      color: #2c3e50;
+    }
+    .payment-section {
+      margin-top: 40px;
+    }
+    label {
+      font-weight: bold;
+      font-size: 16px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    select, input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      color: #333;
+      background: #f9fafb;
+      transition: border-color 0.3s ease;
+    }
+    select:focus, input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    .reference {
+      margin-top: 25px;
+      background: #f7f9fc;
+      padding: 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #3498db;
+      text-align: center;
+    }
+    .payment-details {
+      margin-top: 25px;
+      display: none;
+    }
+    .barcode {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .barcode img {
+      width: 220px;
+      height: auto;
+    }
+    button {
+      margin-top: 30px;
+      width: 100%;
+      padding: 15px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    button:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+    button:active {
+      background-color: #21618c;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div class="receipt">
+    <h2>Booking Confirmation and Payment</h2>
+    <div class="info" id="bookingInfo"></div>
+
+    <div class="payment-section">
+      <label for="paymentMethod">Payment Method:</label>
+      <select id="paymentMethod" required onchange="showPaymentDetails()">
+        <option value="" disabled selected>Select Payment Method</option>
+        <option value="GCash">GCash</option>
+        <option value="Bank Transfer">Bank Transfer</option>
+      </select>
+
+      <div class="payment-details" id="gcashDetails">
+        <label>GCash Number:</label>
+        <div><strong>0917-123-4567</strong></div>
+        <div class="barcode">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?data=09171234567&size=200x200" alt="GCash QR Code">
+        </div>
+      </div>
+
+      <div class="payment-details" id="bankDetails">
+        <label>Bank Name:</label>
+        <div><strong>BDO Unibank</strong></div>
+        <label>Account Number:</label>
+        <div><strong>1234-5678-9012</strong></div>
+        <label>Account Name:</label>
+        <div><strong>Juan Dela Cruz</strong></div>
+      </div>
+
+      <div class="reference" id="referenceBox">System Reference Number: <span id="referenceNumber"></span></div>
+
+      <label for="userReference">Enter Your Payment Reference Number:</label>
+      <input type="text" id="userReference" placeholder="e.g. GCASH123456 / BDO123456" required>
+
+      <button onclick="submitPayment()">Submit & View Receipt</button>
+    </div>
+  </div>
+
+  
+
+  <script>
+    const data = JSON.parse(sessionStorage.getItem("bookingData"));
+
+    function generateReferenceNumber() {
+      const random = Math.floor(100000 + Math.random() * 900000);
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const prefix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
+      return `${prefix}${random}`;
+    }
+
+    const generatedRef = generateReferenceNumber();
+    document.getElementById("referenceNumber").textContent = generatedRef;
+    sessionStorage.setItem("generatedReference", generatedRef);
+
+    if (data) {
+      document.getElementById("bookingInfo").innerHTML = `
+        <strong>Name:</strong> ${data.name}<br>
+        <strong>Email:</strong> ${data.email}<br>
+        <strong>From:</strong> ${data.from}<br>
+        <strong>To:</strong> ${data.to}<br>
+        <strong>Date:</strong> ${data.date}<br>
+        <strong>Time:</strong> ${data.time}<br>
+        <strong>Class:</strong> ${data.seatClass}<br>
+        <strong>Seat:</strong> ${data.seat} (${data.seatPosition})<br>
+        <strong>Price:</strong> ${data.price}
+      `;
+    } else {
+      document.getElementById("bookingInfo").textContent = "No booking data found.";
+    }
+
+    function showPaymentDetails() {
+      const method = document.getElementById("paymentMethod").value;
+      document.getElementById("gcashDetails").style.display = method === "GCash" ? "block" : "none";
+      document.getElementById("bankDetails").style.display = method === "Bank Transfer" ? "block" : "none";
+    }
+
+    function submitPayment() {
+      const paymentMethod = document.getElementById("paymentMethod").value;
+      const userRef = document.getElementById("userReference").value.trim();
+
+      if (!paymentMethod || userRef === "") {
+        alert("Please select a payment method and enter your reference number.");
+        return;
+      }
+
+      const receiptData = {
+        ...data,
+        paymentMethod,
+        userReference: userRef,
+        systemReference: generatedRef
+      };
+
+      sessionStorage.setItem("receiptData", JSON.stringify(receiptData));
+      window.location.href = "receipt.html";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plane Ticket Reservation - Local</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
+      color: #333;
+      background-image: url(bg.jpg); /* Background image */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+    }
+
+    header {
+      background-color: white;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .logo img {
+      height: 40px;
+    }
+
+    nav a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #2c3e50;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #2980b9;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: black;
+    }
+
+    form, .confirmation {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .seat-map {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      justify-items: center;
+      margin-bottom: 20px;
+    }
+
+    .seat {
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .seat.window { background-color: #3498db; }
+    .seat.middle { background-color: #f39c12; }
+    .seat.aisle { background-color: #2ecc71; }
+
+    .seat:hover {
+      transform: scale(1.05);
+    }
+
+    .seat.selected {
+      background-color: #e74c3c !important;
+    }
+
+    .seat[style*="not-allowed"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    #selectedSeatInfo {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .confirmation {
+      text-align: center;
+    }
+
+    .confirmation strong {
+      color: #2c3e50;
+    }
+
+    .confirmation span {
+      color: #27ae60;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Logo and Navigation -->
+<header>
+  <div class="logo">
+    
+      <img src="4.jpg" alt="Philippine Airlines Logo">
+    
+  </div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="booking.html">Local Flights</a>
+    <a href="inter.html">International Flights</a>
+  </nav>
+</header>
+
+<h2>Local Plane Ticket Reservation</h2>
+
+<form id="bookingForm">
+  <!-- Passenger Info -->
+  <label for="name">Full Name</label>
+  <input type="text" id="name" required>
+
+  <label for="email">Email</label>
+  <input type="email" id="email" required>
+
+  <label for="from">From</label>
+  <input type="text" id="from" list="cityList" required>
+
+  <label for="to">To</label>
+  <input type="text" id="to" list="cityList" required>
+
+  <datalist id="cityList">
+    <option value="Manila">
+    <option value="Cebu">
+    <option value="Davao">
+    <option value="Iloilo">
+    <option value="Clark">
+  </datalist>
+
+  <label for="date">Date</label>
+  <input type="date" id="date" required>
+
+  <label for="time">Time</label>
+  <input type="time" id="time" required>
+
+  <label for="class">Class</label>
+  <select id="class" required>
+    <option value="" disabled selected>Select a Class</option>
+    <option value="First Class">First Class</option>
+    <option value="Business">Business</option>
+    <option value="Premium">Premium</option>
+    <option value="Economy">Economy</option>
+  </select>
+
+  <label for="price">Ticket Price</label>
+  <input type="text" id="price" readonly>
+
+  <!-- Seat Info -->
+  <div id="selectedSeatInfo">Please select a seat below</div>
+  <div class="seat-map" id="seatMap"></div>
+  <input type="hidden" id="seat">
+  <input type="hidden" id="seatPosition">
+
+  <button type="submit">Book Ticket</button>
+</form>
+
+<!-- Confirmation -->
+<div class="confirmation" id="confirmationBox" style="display:none;">
+  <h3>Booking Confirmation</h3>
+  <p id="confirmText"></p>
+  <button onclick="window.location.reload()">Book Another</button>
+</div>
+
+<script>
+const seatTypes = ["window", "middle", "aisle", "aisle", "middle", "window"];
+const seatMapContainer = document.getElementById("seatMap");
+const seatInput = document.getElementById("seat");
+const seatPositionInput = document.getElementById("seatPosition");
+const selectedSeatInfo = document.getElementById("selectedSeatInfo");
+const seatClassSelect = document.getElementById("class");
+
+const priceList = {
+  "Manila": { "Cebu": 2500, "Davao": 3500, "Iloilo": 1800, "Clark": 1200 },
+  "Cebu": { "Manila": 2500, "Davao": 2000, "Iloilo": 1700, "Clark": 2600 },
+  "Davao": { "Manila": 3500, "Cebu": 2000, "Iloilo": 2200, "Clark": 3300 },
+  "Iloilo": { "Manila": 1800, "Cebu": 1700, "Davao": 2200, "Clark": 2400 },
+  "Clark": { "Manila": 1200, "Cebu": 2600, "Davao": 3300, "Iloilo": 2400 },
+};
+
+let currentFlightKey = "";
+let reservedSeats = [];
+
+function getSeatClass(row) {
+  if (row <= 2) return "first-class";
+  if (row <= 4) return "business-class";
+  if (row <= 6) return "premium-class";
+  return "economy-class";
+}
+
+function getSelectedClassRange(selectedClass) {
+  switch (selectedClass) {
+    case "First Class": return [1, 2];
+    case "Business": return [3, 4];
+    case "Premium": return [5, 6];
+    case "Economy": return [7, 10];
+    default: return [1, 10];
+  }
+}
+
+function generateSeatMap() {
+  seatMapContainer.innerHTML = "";
+  const selectedClass = seatClassSelect.value;
+  const [startRow, endRow] = getSelectedClassRange(selectedClass);
+
+  for (let row = 1; row <= 10; row++) {
+    for (let col = 0; col < 6; col++) {
+      const seatLabel = String.fromCharCode(65 + col) + row;
+      const type = seatTypes[col];
+      const seatDiv = document.createElement("div");
+
+      seatDiv.className = `seat ${type}`;
+      seatDiv.textContent = seatLabel;
+
+      const isReserved = reservedSeats.includes(seatLabel);
+      const isInSelectedClass = row >= startRow && row <= endRow;
+
+      if (isReserved || !isInSelectedClass) {
+        seatDiv.style.background = "#999";
+        seatDiv.style.cursor = "not-allowed";
+        seatDiv.title = isReserved ? "Seat Reserved" : "Not in selected class";
+      } else {
+        seatDiv.onclick = function () {
+          document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+          seatDiv.classList.add("selected");
+          seatInput.value = seatLabel;
+          seatPositionInput.value = type;
+          selectedSeatInfo.textContent = `Selected Seat: ${seatLabel} (${type})`;
+        };
+      }
+
+      seatMapContainer.appendChild(seatDiv);
+    }
+  }
+}
+
+function loadReservedSeats(from, to, date, time) {
+  currentFlightKey = `${from}-${to}-${date}-${time}`;
+  const stored = localStorage.getItem(currentFlightKey);
+  reservedSeats = stored ? JSON.parse(stored) : [];
+  generateSeatMap();
+}
+
+function updatePrice() {
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  const priceInput = document.getElementById("price");
+  const seatClass = seatClassSelect.value;
+
+  // Base price lookup
+  if (from && to && from !== to && priceList[from] && priceList[from][to]) {
+    let basePrice = priceList[from][to];
+
+    // Price multiplier by class
+    let multiplier = 1;
+    switch (seatClass) {
+      case "First Class":
+        multiplier = 2.5;
+        break;
+      case "Business":
+        multiplier = 2.0;
+        break;
+    case "premium":
+      multiplier = 1.5;
+      break;
+      case "economy":
+      multiplier = 1;
+    }
+
+    const finalPrice = basePrice * multiplier;
+    priceInput.value = `₱ ${finalPrice.toLocaleString()}`;
+  } else {
+    priceInput.value = "";
+  }
+}
+
+
+
+
+["from", "to", "date", "time", "class"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    const from = document.getElementById("from").value;
+    const to = document.getElementById("to").value;
+    const date = document.getElementById("date").value;
+    const time = document.getElementById("time").value;
+    if (from && to && date && time) {
+      loadReservedSeats(from, to, date, time);
+    }
+    updatePrice();
+  });
+});
+document.getElementById("bookingForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const seatClass = seatClassSelect.value;
+  const seat = seatInput.value;
+  const seatPosition = seatPositionInput.value;
+  const price = document.getElementById("price").value;
+
+  if (!seat) {
+    alert("Please select a seat before booking.");
+    return;
+  }
+
+  // Save reserved seat
+  const key = `${from}-${to}-${date}-${time}`;
+  const existing = localStorage.getItem(key);
+  const reserved = existing ? JSON.parse(existing) : [];
+  reserved.push(seat);
+  localStorage.setItem(key, JSON.stringify(reserved));
+
+  // Store all booking data in sessionStorage
+  const bookingData = {
+    name, email, from, to, date, time, seatClass, seat, seatPosition, price
+  };
+  sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
+
+  // Redirect to confirmation page
+  window.location.href = "confirmation.html";
+});
+</script>
+
+</body>
+</html>

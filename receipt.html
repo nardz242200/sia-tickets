@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Official Receipt</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+  
+      font-family: 'Arial', sans-serif;
+      background: #f4f6f9;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative; /* To position the logout button in the top-right corner */
+      background-image: url(bg.jpg); /* Background image */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+    }
+    .receipt {
+      background: #ffffff;
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      font-family: 'Roboto', sans-serif;
+    }
+    h2 {
+      font-size: 28px;
+      text-align: center;
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .info {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #333;
+    }
+    .info strong {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 14px;
+      color: #95a5a6;
+    }
+    .action-btns {
+      margin-top: 30px;
+      display: flex;
+      gap: 10px;
+      justify-content: center; /* Centers the buttons horizontally */
+      align-items: center; /* Vertically aligns the buttons */
+    }
+    .action-btns button {
+      padding: 12px 30px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .print-btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+    }
+    .print-btn:hover {
+      background-color: #2980b9;
+    }
+    .print-btn:active {
+      background-color: #21618c;
+    }
+    .book-again-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+    }
+    .book-again-btn:hover {
+      background-color: #27ae60;
+    }
+    .book-again-btn:active {
+      background-color: #1e8449;
+    }
+    
+    /* Log out button styling */
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+    .logout-btn:active {
+      background-color: #a93226;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Log Out Button -->
+  <button class="logout-btn" onclick="window.location.href='index.html'">Log Out</button>
+
+  <div class="receipt">
+    <h2>Flight Booking Receipt</h2>
+    <div class="info" id="receiptDetails"></div>
+
+    <div class="action-btns">
+      <button class="print-btn" onclick="window.print()">Print Receipt</button>
+      <button class="book-again-btn" onclick="window.location.href='booking.html'">Book Again</button>
+    </div>
+
+    <div class="footer">
+      <p>Thank you for booking with us! Have a safe flight.</p>
+    </div>
+  </div>
+
+  <script>
+    const receiptData = JSON.parse(sessionStorage.getItem("receiptData"));
+
+    if (receiptData) {
+      document.getElementById("receiptDetails").innerHTML = `
+        <strong>Name:</strong> ${receiptData.name}<br>
+        <strong>Email:</strong> ${receiptData.email}<br>
+        <strong>From:</strong> ${receiptData.from}<br>
+        <strong>To:</strong> ${receiptData.to}<br>
+        <strong>Date:</strong> ${receiptData.date}<br>
+        <strong>Time:</strong> ${receiptData.time}<br>
+        <strong>Class:</strong> ${receiptData.seatClass}<br>
+        <strong>Seat:</strong> ${receiptData.seat} (${receiptData.seatPosition})<br>
+        <strong>Price:</strong> ${receiptData.price}<br><br>
+
+        <strong>Payment Method:</strong> ${receiptData.paymentMethod}<br>
+        <strong>Payment Reference No.:</strong> ${receiptData.userReference}<br>
+        <strong>System Reference No.:</strong> ${receiptData.systemReference}
+      `;
+    } else {
+      document.getElementById("receiptDetails").textContent = "No receipt data available.";
+    }
+  </script>
+
+</body>
+</html>
